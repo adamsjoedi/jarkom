@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi UTS Jaringan Komputer - UBSI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
+        }
+        .option-btn {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:active {
+            transform: scale(0.99);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Brand / Course Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 flex-shrink-0">
+                    <i data-lucide="network" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">UBSI</span>
+                        <h1 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">Jaringan Komputer — Persiapan UTS</h1>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Pertemuan 1 s/d 6 • 50 Soal Pilihan Ganda & Analisis Bobot</p>
+                </div>
+            </div>
+
+            <!-- Right Actions: Timer, Mode Indicator, Theme Toggle -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Exam Timer (Visible in Exam Mode) -->
+                <div id="timerContainer" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-700 dark:text-amber-300 font-mono text-xs sm:text-sm font-semibold">
+                    <i data-lucide="timer" class="w-4 h-4 animate-pulse"></i>
+                    <span id="timerDisplay">60:00</span>
+                </div>
+
+                <!-- Live Score Pill (Visible in Practice Mode) -->
+                <div id="liveScoreContainer" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-semibold">
+                    <i data-lucide="award" class="w-4 h-4"></i>
+                    <span>Skor: <strong id="headerScoreText">0</strong></span>
+                </div>
+
+                <!-- Mobile Drawer Button -->
+                <button id="mobileGridBtn" onclick="toggleMobileDrawer()" class="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Daftar Nomor Soal">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Ubah Tema Terang/Gelap">
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-amber-400"></i>
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden text-slate-700"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Selector Sub-bar -->
+        <div class="bg-slate-100/70 dark:bg-slate-900/50 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto py-2 gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <button id="tabPractice" onclick="switchMode('practice')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap bg-blue-600 text-white shadow-sm">
+                        <i data-lucide="book-open-check" class="w-4 h-4"></i>
+                        <span>Mode Latihan (Langsung Cek)</span>
+                    </button>
+                    <button id="tabExam" onclick="switchMode('exam')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                        <span>Mode Simulasi UTS</span>
+                    </button>
+                    <button id="tabMatrix" onclick="switchMode('matrix')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        <span>Matriks Bobot & Kisi-kisi</span>
+                    </button>
+                    <button id="tabResult" onclick="switchMode('result')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                        <span>Evaluasi & Statistik</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openResetModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1.5 transition whitespace-nowrap">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Reset Kuis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- VIEW 1: QUIZ VIEW (Practice & Exam Modes) -->
+        <div id="quizView" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Left Column: Active Question Card (8 cols on lg) -->
+            <div class="lg:col-span-8 space-y-5">
+
+                <!-- Topic Filter Bar -->
+                <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
+                        <i data-lucide="filter" class="w-4 h-4 text-blue-500"></i>
+                        <span>Filter Materi:</span>
+                    </div>
+                    <select id="topicFilter" onchange="handleTopicFilterChange()" class="w-full sm:w-auto flex-1 max-w-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Semua Materi (Pertemuan 1 - 6 • 50 Soal)</option>
+                        <option value="1">Pertemuan 1: Pengenalan Jaringan Komputer (12 Soal)</option>
+                        <option value="2">Pertemuan 2: IP Address dan Subnetting (16 Soal)</option>
+                        <option value="3">Pertemuan 3: Perangkat Perantara / Intermediary (8 Soal)</option>
+                        <option value="4">Pertemuan 4: Perakitan Media Transmisi (6 Soal)</option>
+                        <option value="5">Pertemuan 5: Topologi Jaringan (5 Soal)</option>
+                        <option value="6">Pertemuan 6: Jaringan Sederhana & Studi Kasus (3 Soal)</option>
+                    </select>
+                </div>
+
+                <!-- Question Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <!-- Question Header -->
+                    <div class="px-5 py-4 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span id="qNumberBadge" class="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs sm:text-sm shadow-sm">
+                                Soal #1
+                            </span>
+                            <span id="qMeetingBadge" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-semibold">
+                                Pertemuan 1
+                            </span>
+                            <span id="qCognitiveBadge" class="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-mono font-semibold">
+                                C1-C2
+                            </span>
+                        </div>
+
+                        <!-- Bookmark / Ragu-ragu Toggle -->
+                        <button id="doubtBtn" onclick="toggleDoubt()" class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-950/40">
+                            <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+                            <span id="doubtBtnText">Tandai Ragu-ragu</span>
+                        </button>
+                    </div>
+
+                    <!-- Question Body -->
+                    <div class="p-5 sm:p-7">
+                        <p id="qCategoryTitle" class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2">
+                            Pengenalan Jaringan Komputer
+                        </p>
+                        <div id="qText" class="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-relaxed mb-6 whitespace-pre-line">
+                            Memuat pertanyaan...
+                        </div>
+
+                        <!-- Options List -->
+                        <div id="optionsContainer" class="space-y-3">
+                            <!-- Dynamically populated -->
+                        </div>
+
+                        <!-- Academic Explanation Box (Shown in Practice Mode after answer, or after Exam Submit) -->
+                        <div id="explanationBox" class="hidden mt-6 rounded-2xl p-4 sm:p-5 border transition-all">
+                            <div class="flex items-start gap-3">
+                                <div id="explanationIconBox" class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i id="explanationIcon" data-lucide="check-circle-2" class="w-5 h-5"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <h4 id="explanationStatusTitle" class="font-bold text-sm sm:text-base">Jawaban Benar!</h4>
+                                        <span id="explanationKeyBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-white/60 dark:bg-slate-900/60">Kunci: B</span>
+                                    </div>
+                                    <p class="text-xs font-semibold uppercase tracking-wider opacity-75 mb-1.5">Pembahasan Akademis Dosen:</p>
+                                    <p id="explanationText" class="text-xs sm:text-sm leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question Footer Navigation -->
+                    <div class="px-5 py-4 bg-slate-50/80 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                        <button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            <span>Sebelumnya</span>
+                        </button>
+
+                        <span id="progressCounterText" class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            1 dari 50
+                        </span>
+
+                        <div class="flex items-center gap-2">
+                            <button id="nextBtn" onclick="navigateQuestion(1)" class="px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-2">
+                                <span>Selanjutnya</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+
+                            <button id="finishExamBtn" onclick="openSubmitModal()" class="hidden px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition items-center gap-2">
+                                <i data-lucide="check-square" class="w-4 h-4"></i>
+                                <span>Selesai & Kumpulkan</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Question Navigator & Progress Sidebar (4 cols on lg) -->
+            <div class="lg:col-span-4 space-y-5 hidden lg:block">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm sticky top-32">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="grid" class="w-4 h-4 text-blue-500"></i>
+                            <span>Navigasi Nomor Soal</span>
+                        </h3>
+                        <span id="answeredCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                            0/50 Terjawab
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-4">
+                        <div id="sidebarProgressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
+                            <span id="legendCorrectText">Benar / Dijawab</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-rose-500 inline-block"></span>
+                            <span>Salah (Latihan)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-amber-500 inline-block"></span>
+                            <span>Ragu-ragu</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
+                            <span>Belum Dijawab</span>
+                        </div>
+                    </div>
+
+                    <!-- 50 Number Grid -->
+                    <div id="desktopNumberGrid" class="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto pr-1">
+                        <!-- Dynamically generated -->
+                    </div>
+
+                    <!-- Submit Button in Sidebar -->
+                    <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button onclick="switchMode('result')" id="viewResultSidebarBtn" class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white transition flex items-center justify-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                            <span>Lihat Evaluasi Penguasaan Materi</span>
+                        </button>
+                        <button onclick="openSubmitModal()" id="submitExamSidebarBtn" class="hidden w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition items-center justify-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>Selesai & Kumpulkan UTS</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: MATRIX & SYLLABUS VIEW -->
+        <div id="matrixView" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Silabus & Taksonomi Bloom</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">Matriks Analisis Bobot Soal UTS Jaringan Komputer</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Distribusi 50 butir soal berdasarkan tingkat urgensi kompetensi teknis pada Modul Pertemuan 1 s/d 6 UBSI.</p>
+                    </div>
+                    <button onclick="switchMode('practice')" class="self-start md:self-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span>Mulai Kerjakan Soal</span>
+                    </button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                    <div class="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60">
+                        <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">Total Butir Soal</p>
+                        <p class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">50 Soal Pilihan Ganda</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Skor 2 Poin per Soal (Total 100)</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-900/60">
+                        <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase">Porsi Bobot Terbesar</p>
+                        <p class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Pertemuan 2 (32%)</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">IP Addressing, Kelas IP & Perhitungan Subnetting</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-900/60">
+                        <p class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Level Taksonomi</p>
+                        <p class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">C1 s/d C4</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Konseptual, Aplikasi Perhitungan & Troubleshooting</p>
+                    </div>
+                </div>
+
+                <!-- Matrix Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs uppercase font-bold">
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700">Pertemuan</th>
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700">Pokok Bahasan Modul</th>
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700 text-center">Taksonomi</th>
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700 text-center">Bobot (%)</th>
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700 text-center">Jumlah Soal</th>
+                                <th class="py-3.5 px-4 border-b border-slate-200 dark:border-slate-700 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-xs sm:text-sm">
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 1</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">Pengenalan Jaringan Komputer</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">End/Intermediary device, UTP/STP/Fiber/Wireless, Standar Ethernet (10BASE-T s/d 10GBASE), NIC & MAC, Area (PAN-WAN), Keamanan Jaringan.</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C1, C2</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">24%</td>
+                                <td class="py-4 px-4 text-center font-semibold">12 Soal (No. 1–12)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('1')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 1</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 2</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">IP Address dan Subnetting</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Struktur 32-bit IPv4, Kelas A/B/C, IP Public vs Private, Loopback & APIPA, Konsep CIDR, Perhitungan Subnet ($2^n$) & Host ($2^h-2$), Range Host & Broadcast.</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C2, C3, C4</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">32%</td>
+                                <td class="py-4 px-4 text-center font-semibold">16 Soal (No. 13–28)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('2')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 2</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 3</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">Perangkat Perantara (Intermediary Device)</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Karakteristik Hub (Half Duplex) vs Switch (Collision Domain & MAC Table), Hirarki Switch (Access, Distribution, Core Layer), Fungsi Router.</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C2, C3</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">16%</td>
+                                <td class="py-4 px-4 text-center font-semibold">8 Soal (No. 29–36)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('3')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 3</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 4</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">Perakitan Media Transmisi</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Fungsi Crimping Tool & LAN Tester, Urutan Warna Standar Straight-Through & Cross-Over, Fungsi Pin Transmit (1,2) & Receive (3,6).</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C2, C3</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">12%</td>
+                                <td class="py-4 px-4 text-center font-semibold">6 Soal (No. 37–42)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('4')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 4</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 5</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">Topologi Jaringan</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Physical vs Logical Topology, Peer-to-Peer vs Client-Server (NOS), Karakteristik Ring, Dual Ring, Mesh, Bus, Star, Hybrid, Pengembangan SOHO & WAN.</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C2, C3</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">10%</td>
+                                <td class="py-4 px-4 text-center font-semibold">5 Soal (No. 43–47)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('5')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 5</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="py-4 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">Pertemuan 6</td>
+                                <td class="py-4 px-4 text-slate-600 dark:text-slate-300">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-100">Jaringan Sederhana & Studi Kasus Praktikum</div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Koneksi 2 Laptop (/24), 5 Laptop + 1 Switch (/24), Analisis kasus 4 Laptop + Switch dengan /30 berbeda subnet, Pengenalan Packet Tracer.</div>
+                                </td>
+                                <td class="py-4 px-4 text-center"><span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs">C3, C4</span></td>
+                                <td class="py-4 px-4 text-center font-bold text-blue-600 dark:text-blue-400">6%</td>
+                                <td class="py-4 px-4 text-center font-semibold">3 Soal (No. 48–50)</td>
+                                <td class="py-4 px-4 text-center">
+                                    <button onclick="filterAndStart('6')" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-semibold text-xs">Latihan Bab 6</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: EVALUATION & STATISTICS VIEW -->
+        <div id="resultView" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Laporan Hasil Belajar</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">Evaluasi Penguasaan Materi UTS</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Analisis skor keseluruhan dan rincian pemahaman per pertemuan untuk mendeteksi materi yang perlu diulas kembali.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="switchMode('practice')" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                            <span>Review Pembahasan Soal</span>
+                        </button>
+                        <button onclick="openResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 transition">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            <span>Ulangi Dari Awal</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Score Summary Grid -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-md">
+                        <p class="text-xs font-semibold uppercase tracking-wider opacity-80">Skor Akhir (Skala 100)</p>
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <span id="statFinalScore" class="text-4xl font-extrabold">0</span>
+                            <span class="text-sm opacity-80">/ 100</span>
+                        </div>
+                        <p id="statGradeLabel" class="text-xs font-medium mt-2 px-2 py-0.5 rounded bg-white/20 inline-block">Belum Selesai</p>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60">
+                        <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase">Jawaban Benar</p>
+                        <p id="statCorrectCount" class="text-3xl font-extrabold text-emerald-700 dark:text-emerald-300 mt-2">0</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Dari 50 Soal</p>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60">
+                        <p class="text-xs font-semibold text-rose-700 dark:text-rose-400 uppercase">Jawaban Salah</p>
+                        <p id="statWrongCount" class="text-3xl font-extrabold text-rose-700 dark:text-rose-300 mt-2">0</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Perlu dipelajari ulang</p>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+                        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Belum Dijawab</p>
+                        <p id="statUnansweredCount" class="text-3xl font-extrabold text-slate-800 dark:text-slate-200 mt-2">50</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Soal kosong</p>
+                    </div>
+                </div>
+
+                <!-- Per-Meeting Breakdown -->
+                <h3 class="font-bold text-base text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-blue-500"></i>
+                    <span>Persentase Penguasaan Materi per Pertemuan</span>
+                </h3>
+                <div id="topicBreakdownContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileDrawerBackdrop" onclick="toggleMobileDrawer()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+    <div id="mobileDrawer" class="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 p-5 z-50 transform translate-y-full transition-transform duration-300 lg:hidden max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="layout-grid" class="w-4 h-4 text-blue-500"></i>
+                <span>Daftar Nomor Soal (1 - 50)</span>
+            </h3>
+            <button onclick="toggleMobileDrawer()" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="mobileNumberGrid" class="grid grid-cols-6 sm:grid-cols-10 gap-2 py-4 overflow-y-auto">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+
+    <!-- Custom Modal: Confirm Reset / Confirm Submit -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="modalIconContainer" class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                    <i id="modalIcon" data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <h3 id="modalTitle" class="font-bold text-lg text-slate-900 dark:text-white">Konfirmasi</h3>
+            </div>
+            <p id="modalDescription" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                Apakah Anda yakin?
+            </p>
+            <div class="flex items-center justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+                    Batal
+                </button>
+                <button id="modalConfirmBtn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATA 50 SOAL JARINGAN KOMPUTER (PERTEMUAN 1 S/D 6)
+        // =========================================================================
+        const questionsData = [
+            // PERTEMUAN 1 (12 Soal)
+            {
+                id: 1,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C1",
+                question: "Dua perangkat atau lebih yang saling terhubung melalui media transmisi dan dapat saling berkomunikasi dalam pengiriman data disebut:",
+                options: [
+                    "Sistem Operasi Terdistribusi",
+                    "Jaringan Komputer",
+                    "Intermediary System",
+                    "Topologi Bus"
+                ],
+                answer: 1,
+                explanation: "Jaringan komputer adalah interkoneksi antara dua perangkat (device) atau lebih melalui media transmisi untuk pertukaran/pengiriman data."
+            },
+            {
+                id: 2,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C1",
+                question: "Perangkat yang berperan sebagai antarmuka (interface) antara pengguna (user) dengan jaringan komputer serta menjadi sumber atau tujuan data adalah:",
+                options: [
+                    "Intermediary Device",
+                    "End Device",
+                    "Distribution Device",
+                    "Transmission Media"
+                ],
+                answer: 1,
+                explanation: "End Device bertindak sebagai pengirim/penerima data, sumber/tujuan data, dan penghubung (interface) antara pengguna dengan jaringan komputer (contoh: Laptop, PC, Smartphone, Server)."
+            },
+            {
+                id: 3,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Manakah kelompok perangkat di bawah ini yang seluruhnya tergolong sebagai Intermediary Device?",
+                options: [
+                    "Laptop, Smartphone, Switch",
+                    "Hub, Switch, Router, Access Point",
+                    "Server, PC, Access Point, Router",
+                    "Tablet, Switch, Hub, Server"
+                ],
+                answer: 1,
+                explanation: "Hub, Switch, Router, dan Access Point merupakan perangkat perantara (Intermediary Device) yang menghubungkan end-device dan mengelola pengiriman data."
+            },
+            {
+                id: 4,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Kabel UTP dan STP tergolong ke dalam media transmisi inti tembaga. Karakteristik utama dari kabel tembaga adalah:",
+                options: [
+                    "Tahan terhadap redaman dan memiliki jangkauan hingga ribuan kilometer",
+                    "Mentransmisikan sinyal menggunakan modulasi cahaya tampak",
+                    "Relatif murah, mudah diinstalasi, namun memiliki keterbatasan jarak dan rentan interferensi",
+                    "Bebas dari gangguan Electromagnetic Interference (EMI)"
+                ],
+                answer: 2,
+                explanation: "Karakteristik kabel tembaga meliputi harga relatif murah, instalasi mudah, resistansi rendah terhadap arus listrik, namun memiliki keterbatasan dari sisi jarak dan interferensi."
+            },
+            {
+                id: 5,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Kabel STP jarang digunakan pada jaringan LAN standar dibandingkan kabel UTP karena:",
+                options: [
+                    "Memiliki batasan jarak maksimal hanya 10 meter",
+                    "Harganya relatif lebih mahal dan membutuhkan pembumian (grounded) pada kedua ujungnya",
+                    "Tidak mendukung konektor modular RJ-45",
+                    "Hanya mampu mentransmisikan data dengan kecepatan di bawah 1 Mbps"
+                ],
+                answer: 1,
+                explanation: "Shielded Twisted-Pair (STP) jarang digunakan karena faktor harga yang lebih mahal dan perlu di-grounded (pembumian) pada kedua ujungnya untuk mengurangi noise."
+            },
+            {
+                id: 6,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Kabel Rollover secara khusus digunakan untuk keperluan:",
+                options: [
+                    "Menghubungkan switch unmanaged ke router secara nirkabel",
+                    "Menghubungkan port serial PC (converter DB9) ke port console router atau manageable switch",
+                    "Menghubungkan dua buah switch pada access layer",
+                    "Memperkuat transmisi data berkecepatan 10 Gbps"
+                ],
+                answer: 1,
+                explanation: "Kabel Rollover digunakan khusus dengan converter DB9 (port serial PC) ke port console untuk mengonfigurasi manageable switch atau router."
+            },
+            {
+                id: 7,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Standar Ethernet tipe 1000BASE-T memiliki spesifikasi kecepatan dan media transmisi berupa:",
+                options: [
+                    "100 Mbps dengan kabel Cat5 UTP, jarak 100 m",
+                    "1 Gbps dengan kabel Cat5e UTP, jarak 100 m",
+                    "1 Gbps dengan Single-mode fiber, jarak 2 km",
+                    "10 Gbps dengan kabel Cat6a UTP, jarak 100 m"
+                ],
+                answer: 1,
+                explanation: "Berdasarkan tabel standar Ethernet pada modul Pertemuan 1, 1000BASE-T memiliki bandwidth 1 Gbps menggunakan kabel Cat5e UTP dengan jarak maksimal 100 meter."
+            },
+            {
+                id: 8,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C1",
+                question: "Lapisan serat optik yang berfungsi memantulkan kembali sinyal cahaya ke dalam bagian inti (core) dinamakan:",
+                options: [
+                    "Jacket",
+                    "Strengthening material",
+                    "Buffer",
+                    "Cladding"
+                ],
+                answer: 3,
+                explanation: "Struktur Fiber Optic terdiri dari Core (inti kaca tempat merambatnya cahaya), Cladding (pemantul cahaya agar tetap di dalam core), Buffer, Strengthening material, dan Jacket."
+            },
+            {
+                id: 9,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C1",
+                question: "Alamat unik yang disematkan langsung oleh pabrikan ke dalam Network Interface Card (NIC) dan berfungsi sebagai identitas fisik perangkat pada jaringan lokal adalah:",
+                options: [
+                    "IP Address",
+                    "Subnet Mask",
+                    "MAC Address",
+                    "Gateway Address"
+                ],
+                answer: 2,
+                explanation: "Dari setiap manufaktur, NIC telah disematkan MAC Address (Physical Address) sebagai alamat unik pengidentifikasi perangkat di jaringan."
+            },
+            {
+                id: 10,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Jaringan komputer yang memiliki radius jangkauan antara 10 hingga 1.000 meter dan umum diimplementasikan pada skala gedung perkantoran disebut:",
+                options: [
+                    "PAN (Personal Area Network)",
+                    "LAN (Local Area Network)",
+                    "MAN (Metropolitan Area Network)",
+                    "CAN (Campus Area Network)"
+                ],
+                answer: 1,
+                explanation: "Sesuai tabel jarak relatif jaringan di Pertemuan 1: PAN (1–10 m, ruangan), LAN (10–1000 m, gedung), CAN (1000–10.000 m, kampus), MAN (10.000–100.000 m, kota)."
+            },
+            {
+                id: 11,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C1",
+                question: "Standar regulasi internasional dari IEEE yang mengatur teknologi komunikasi data nirkabel (wireless local area network) adalah:",
+                options: [
+                    "IEEE 802.3",
+                    "IEEE 802.5",
+                    "IEEE 802.11",
+                    "IEEE 802.15"
+                ],
+                answer: 2,
+                explanation: "Teknologi wireless LAN distandarisasi melalui IEEE 802.11 (seperti 802.11a, 802.11b, 802.11g/n)."
+            },
+            {
+                id: 12,
+                meeting: 1,
+                meetingTitle: "Pengenalan Jaringan Komputer",
+                cognitive: "C2",
+                question: "Serangan keamanan jaringan berupa celah kerentanan yang dieksploitasi pada hari pertama celah ditemukan sebelum adanya perbaikan dikenal dengan istilah:",
+                options: [
+                    "Trojan Horse",
+                    "Spyware",
+                    "Zero-day attack",
+                    "Data interception"
+                ],
+                answer: 2,
+                explanation: "Serangan zero-day (disebut juga serangan zero-jam) adalah ancaman yang mengeksploitasi kerentanan sistem sebelum patch/perbaikan tersedia."
+            },
+
+            // PERTEMUAN 2 (16 Soal)
+            {
+                id: 13,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C1",
+                question: "Alamat IPv4 dibentuk oleh sekumpulan bilangan biner sepanjang:",
+                options: [
+                    "16 bit yang dibagi menjadi 2 bagian",
+                    "32 bit yang dibagi menjadi 4 bagian",
+                    "64 bit yang dibagi menjadi 8 bagian",
+                    "128 bit yang dibagi menjadi 16 bagian"
+                ],
+                answer: 1,
+                explanation: "IPv4 terdiri atas 32 bit bilangan biner yang dibagi menjadi 4 bagian (oktet), di mana masing-masing oktet berukuran 8 bit."
+            },
+            {
+                id: 14,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Suatu alamat IP yang memiliki oktet pertama dengan rentang 128 hingga 191 termasuk ke dalam pengalamatan kelas:",
+                options: [
+                    "Kelas A",
+                    "Kelas B",
+                    "Kelas C",
+                    "Kelas D"
+                ],
+                answer: 1,
+                explanation: "Pembagian kelas IPv4: Kelas A (0–126, /8), Kelas B (128–191, /16), dan Kelas C (192–223, /24)."
+            },
+            {
+                id: 15,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Blok alamat IP yang dialokasikan khusus untuk jaringan privat (Private IP) pada kelas B adalah:",
+                options: [
+                    "10.0.0.0 – 10.255.255.255",
+                    "172.16.0.0 – 172.31.255.255",
+                    "192.168.0.0 – 192.168.255.255",
+                    "169.254.0.0 – 169.254.255.255"
+                ],
+                answer: 1,
+                explanation: "Tiga range IP Private adalah: 10.0.0.0/8 (10.0.0.0 - 10.255.255.255), 172.16.0.0/12 (172.16.0.0 - 172.31.255.255), dan 192.168.0.0/16 (192.168.0.0 - 192.168.255.255)."
+            },
+            {
+                id: 16,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Rentang alamat 127.0.0.0/8 (127.0.0.1 - 127.255.255.254) dialokasikan secara spesifik untuk fungsi:",
+                options: [
+                    "APIPA (Automatic Private IP Addressing)",
+                    "Pengalamatan Loopback",
+                    "Komunikasi multicast global",
+                    "Default gateway ISP"
+                ],
+                answer: 1,
+                explanation: "Alamat 127.0.0.0/8 (127.0.0.1 s/d 127.255.255.254) adalah IP penggunaan khusus yang dicadangkan untuk Loopback host."
+            },
+            {
+                id: 17,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Apabila sebuah perangkat komputer menggunakan alamat IP khusus 169.254.10.5 (dalam blok 169.254.0.0/16), maka alamat tersebut merupakan contoh dari:",
+                options: [
+                    "Public IP Address",
+                    "Link-lokal / APIPA",
+                    "Loopback Address",
+                    "Classful Static Address"
+                ],
+                answer: 1,
+                explanation: "Rentang 169.254.0.0/16 (169.254.0.1 - 169.254.255.254) digunakan untuk alamat Link-lokal atau Automatic Private IP Addressing (APIPA)."
+            },
+            {
+                id: 18,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Pada alamat IP kelas C default, proporsi bit yang digunakan untuk merepresentasikan Network ID dan Host ID adalah:",
+                options: [
+                    "8 bit Network dan 24 bit Host",
+                    "16 bit Network dan 16 bit Host",
+                    "24 bit Network dan 8 bit Host",
+                    "30 bit Network dan 2 bit Host"
+                ],
+                answer: 2,
+                explanation: "IP Kelas C memiliki format NNNNNNNN.NNNNNNNN.NNNNNNNN.HHHHHHHH (3 oktet pertama atau 24 bit sebagai Network, dan 1 oktet terakhir atau 8 bit sebagai Host)."
+            },
+            {
+                id: 19,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Konsep dasar dari metode subnetting adalah:",
+                options: [
+                    "Mengubah alamat IPv4 menjadi format IPv6",
+                    "Menghapus bit network untuk menambah alokasi broadcast",
+                    "Memperbanyak Network ID dengan mengorbankan/meminjam sebagian bit Host ID",
+                    "Menggabungkan dua kartu jaringan fisik menjadi satu jalur virtual"
+                ],
+                answer: 2,
+                explanation: "Subnetting adalah metode memperbanyak Network ID dari suatu Network ID yang telah ada dengan meminjam sebagian bit Host ID untuk ditambahkan pada porsi Network ID."
+            },
+            {
+                id: 20,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Notasi CIDR /24 ekuivalen dengan nilai subnet mask desimal:",
+                options: [
+                    "255.0.0.0",
+                    "255.255.0.0",
+                    "255.255.255.0",
+                    "255.255.255.128"
+                ],
+                answer: 2,
+                explanation: "Notasi /24 merepresentasikan 24 bit bernilai 1 (11111111.11111111.11111111.00000000) yang dalam desimal ditulis 255.255.255.0."
+            },
+            {
+                id: 21,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Diberikan alamat IP 192.168.10.1/25. Berapakah jumlah network dan jumlah host yang terbentuk?",
+                options: [
+                    "1 Network dan 254 Host",
+                    "2 Network dan 126 Host",
+                    "4 Network dan 62 Host",
+                    "8 Network dan 30 Host"
+                ],
+                answer: 1,
+                explanation: "Pada /25 (oktet ke-4: 10000000), bit 1 yang dipinjam (n) = 1 sehingga jumlah Network = 2^1 = 2. Sisa bit 0 (h) = 7 sehingga jumlah Host = 2^7 - 2 = 128 - 2 = 126 Host."
+            },
+            {
+                id: 22,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Berapakah subnet mask biner dan desimal pada oktet terakhir untuk prefiks CIDR /27?",
+                options: [
+                    "11000000 (255.255.255.192)",
+                    "11100000 (255.255.255.224)",
+                    "11110000 (255.255.255.240)",
+                    "11111000 (255.255.255.248)"
+                ],
+                answer: 1,
+                explanation: "Prefiks /27 meminjam 3 bit host pada oktet ke-4 menjadi 11100000. Nilai desimalnya adalah 128 + 64 + 32 = 224, sehingga subnet mask menjadi 255.255.255.224."
+            },
+            {
+                id: 23,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Pada subnetting 192.168.10.1/25, jika Network 0 memiliki Network Address 192.168.10.0/25, maka berapakah Broadcast Address untuk Network 0 tersebut?",
+                options: [
+                    "192.168.10.126",
+                    "192.168.10.127",
+                    "192.168.10.128",
+                    "192.168.10.255"
+                ],
+                answer: 1,
+                explanation: "Pada Network 0 (/25), alamat Network adalah 192.168.10.0, rentang host adalah 192.168.10.1 s/d 192.168.10.126, dan Broadcast Address adalah 192.168.10.127."
+            },
+            {
+                id: 24,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Rentang alamat host (First Host s/d Last Host) pada Network 1 (192.168.10.128/25) adalah:",
+                options: [
+                    "192.168.10.128 – 192.168.10.254",
+                    "192.168.10.129 – 192.168.10.254",
+                    "192.168.10.129 – 192.168.10.255",
+                    "192.168.10.1 – 192.168.10.126"
+                ],
+                answer: 1,
+                explanation: "Pada Network 1 (/25), Network Address adalah 192.168.10.128 dan Broadcast Address adalah 192.168.10.255, sehingga alamat host valid dimulai dari 192.168.10.129 hingga 192.168.10.254."
+            },
+            {
+                id: 25,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Sebuah jaringan menggunakan alamat IP 192.168.10.1/27. Berapakah jumlah Network dan Host per subnet yang terbentuk?",
+                options: [
+                    "4 Network dan 62 Host",
+                    "8 Network dan 30 Host",
+                    "16 Network dan 14 Host",
+                    "32 Network dan 6 Host"
+                ],
+                answer: 1,
+                explanation: "Sesuai Contoh 3 di modul Pertemuan 2: /27 memiliki n = 3 bit (Network = 2^3 = 8 Network) dan h = 5 bit (Host = 2^5 - 2 = 32 - 2 = 30 Host)."
+            },
+            {
+                id: 26,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C3",
+                question: "Berapakah jumlah bit host (h) dan kapasitas host valid pada alamat IP 192.168.10.1/30?",
+                options: [
+                    "h = 1 bit (0 host)",
+                    "h = 2 bit (2 host)",
+                    "h = 3 bit (6 host)",
+                    "h = 4 bit (14 host)"
+                ],
+                answer: 1,
+                explanation: "Pada prefiks /30 (11111100 pada oktet ke-4), tersisa h = 2 bit nol. Jumlah host yang dapat digunakan adalah 2^2 - 2 = 4 - 2 = 2 host."
+            },
+            {
+                id: 27,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C4",
+                question: "Alamat IP 192.168.10.1/30 berada pada blok subnet pertama (192.168.10.0/30). Berapakah alamat Broadcast dari subnet tersebut?",
+                options: [
+                    "192.168.10.1",
+                    "192.168.10.2",
+                    "192.168.10.3",
+                    "192.168.10.4"
+                ],
+                answer: 2,
+                explanation: "Blok /30 memiliki kelipatan 4 alamat: Network Address = 192.168.10.0, Host ke-1 = 192.168.10.1, Host ke-2 = 192.168.10.2, dan Broadcast Address = 192.168.10.3."
+            },
+            {
+                id: 28,
+                meeting: 2,
+                meetingTitle: "IP Address dan Subnetting",
+                cognitive: "C2",
+                question: "Diketahui rumus perhitungan jumlah host adalah 2^h - 2. Pengurangan angka 2 dilakukan karena:",
+                options: [
+                    "Dua alamat digunakan untuk gateway dan DNS",
+                    "Alamat pertama dipakai untuk Network Address dan alamat terakhir untuk Broadcast Address",
+                    "Dua bit dialokasikan untuk penanda kelas IP",
+                    "Alamat pertama dan terakhir dicadangkan untuk port console"
+                ],
+                answer: 1,
+                explanation: "Dalam setiap blok subnet, alamat pertama (seluruh bit host = 0) digunakan sebagai Network Address dan alamat terakhir (seluruh bit host = 1) digunakan sebagai Broadcast Address."
+            },
+
+            // PERTEMUAN 3 (8 Soal)
+            {
+                id: 29,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Karakteristik utama dari perangkat Hub yang membedakannya dengan Switch adalah:",
+                options: [
+                    "Hub beroperasi secara Full Duplex dan mampu membaca MAC Address",
+                    "Hub digunakan pada LAN kecil, murah, plug & play, dan beroperasi dengan mode komunikasi Half Duplex",
+                    "Hub memiliki sistem operasi internal untuk manajemen VLAN",
+                    "Hub mampu membagi jaringan ke dalam beberapa collision domain"
+                ],
+                answer: 1,
+                explanation: "Pada modul Pertemuan 3, karakteristik Hub adalah dipergunakan pada LAN kecil, murah, pengoperasian mudah (Plug & Play), dan mode komunikasi Half Duplex."
+            },
+            {
+                id: 30,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Switch meneruskan frame data (forward frame) Ethernet menuju port tujuan berdasarkan:",
+                options: [
+                    "IP Address tujuan",
+                    "Nomor Port TCP/UDP",
+                    "MAC Address tujuan dari frame",
+                    "Subnet mask pengirim"
+                ],
+                answer: 2,
+                explanation: "Switch menyimpan tabel alamat dan meneruskan frame data (forward frame) Ethernet berdasarkan MAC Address tujuan dari frame tersebut."
+            },
+            {
+                id: 31,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Pada Hirarki Switch Network, pembagian 3 lapis (layer) switch yang tepat adalah:",
+                options: [
+                    "Physical Layer, Data Link Layer, Network Layer",
+                    "Access Layer, Distribution Layer, Core Layer",
+                    "LAN Layer, MAN Layer, WAN Layer",
+                    "Input Layer, Process Layer, Output Layer"
+                ],
+                answer: 1,
+                explanation: "Hirarki Switch Network dibagi ke dalam 3 lapis (layer): 1. Access Layer, 2. Distribution Layer, dan 3. Core Layer."
+            },
+            {
+                id: 32,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Lapisan switch yang bertujuan memudahkan koneksi end devices ke dalam jaringan dan memiliki fitur seperti Port Security, VLAN, serta Power over Ethernet (PoE) adalah:",
+                options: [
+                    "Access Layer Switch",
+                    "Distribution Layer Switch",
+                    "Core Layer Switch",
+                    "Backbone Layer Switch"
+                ],
+                answer: 0,
+                explanation: "Access Layer Switch memudahkan koneksi end devices ke jaringan dan memiliki fitur Port Security, VLAN, Fast/Gigabit Ethernet, PoE, Link Aggregation, serta QoS."
+            },
+            {
+                id: 33,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C3",
+                question: "Manakah yang merupakan karakteristik dan fitur dari Distribution Layer Switch?",
+                options: [
+                    "Hanya bekerja di Layer 1 tanpa konfigurasi",
+                    "Menerima data dari Access Layer untuk diteruskan ke Core Layer, mendukung Layer 3, High Forwarding, dan Access Control List (ACL)",
+                    "Digunakan khusus untuk menghubungkan mouse dan keyboard nirkabel",
+                    "Tidak mendukung Gigabit Ethernet maupun QoS"
+                ],
+                answer: 1,
+                explanation: "Distribution Layer Switch menerima data dari Access Layer Switch dan meneruskannya ke Core Layer Switch, dengan fitur dukungan Layer 3, High Forwarding, Redundant, dan Access Control List (ACL)."
+            },
+            {
+                id: 34,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Lapisan switch yang berfungsi sebagai backbone jaringan, menangani sebagian besar lalu lintas LAN, dan memiliki fitur Very High Forwarding adalah:",
+                options: [
+                    "Access Layer Switch",
+                    "Distribution Layer Switch",
+                    "Core Layer Switch",
+                    "Edge Layer Switch"
+                ],
+                answer: 2,
+                explanation: "Core Layer Switch merupakan backbone yang bertanggung jawab menangani sebagian besar jaringan LAN dengan fitur Very High Forwarding."
+            },
+            {
+                id: 35,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C2",
+                question: "Perangkat perantara utama yang berfungsi untuk menghubungkan beberapa jaringan (network) yang berbeda, seperti menghubungkan LAN, WAN, dan WLAN adalah:",
+                options: [
+                    "Hub",
+                    "Unmanaged Switch",
+                    "Router",
+                    "Repeater"
+                ],
+                answer: 2,
+                explanation: "Router adalah perangkat utama yang digunakan untuk menghubungkan beberapa jaringan (network) yang berbeda, termasuk menghubungkan LAN, WAN, dan WLAN."
+            },
+            {
+                id: 36,
+                meeting: 3,
+                meetingTitle: "Perangkat Perantara (Intermediary Device)",
+                cognitive: "C3",
+                question: "Keunggulan perangkat Switch dalam mengelola lalu lintas data dibandingkan Hub pada jaringan LAN adalah kemampuannya untuk:",
+                options: [
+                    "Menyatukan seluruh jaringan menjadi satu collision domain tunggal",
+                    "Membagi/mensegmentasi jaringan ke dalam beberapa Collision Domain dan dapat dikonfigurasi (manageable)",
+                    "Mengubah sinyal cahaya fiber langsung menjadi gelombang Wi-Fi",
+                    "Menghilangkan kebutuhan penggunaan kabel UTP"
+                ],
+                answer: 1,
+                explanation: "Switch mampu membagi/segmen jaringan ke dalam beberapa Collision Domain dan model manageable dapat dikonfigurasi untuk kebutuhan keamanan serta pengembangan jaringan."
+            },
+
+            // PERTEMUAN 4 (6 Soal)
+            {
+                id: 37,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C2",
+                question: "Peralatan perakitan media transmisi yang memiliki tiga fungsi utama untuk memotong kabel, melepas pembungkus kabel, dan memasang/merapatkan konektor RJ-45 adalah:",
+                options: [
+                    "LAN Tester",
+                    "Crimping Tool",
+                    "Punch Down Tool",
+                    "Optical Power Meter"
+                ],
+                answer: 1,
+                explanation: "Pada modul Pertemuan 4, Crimping Tool berfungsi untuk memotong kabel, melepas pembungkus kabel, dan memasang konektor RJ-45."
+            },
+            {
+                id: 38,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C2",
+                question: "Fungsi utama penggunaan LAN Tester setelah proses crimping kabel UTP selesai dilakukan adalah:",
+                options: [
+                    "Mengukur kecepatan bandwidth internet dari ISP",
+                    "Memeriksa koneksi antar kabel apakah pin-pin yang terkoneksi telah sesuai dengan standar",
+                    "Mengatur alamat IP otomatis pada setiap ujung kabel",
+                    "Mengupas kulit kabel UTP secara otomatis"
+                ],
+                answer: 1,
+                explanation: "LAN Tester digunakan untuk memeriksa koneksi antar kabel, memastikan apakah pin-pin yang terkoneksi telah sesuai dengan standar."
+            },
+            {
+                id: 39,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C3",
+                question: "Urutan warna kabel UTP pada pemasangan standar Straight-Through (T568B) dari Pin 1 hingga Pin 8 yang tepat adalah:",
+                options: [
+                    "Green/White, Green, Orange/White, Blue, Blue/White, Orange, Brown/White, Brown",
+                    "Orange/White, Orange, Green/White, Blue, Blue/White, Green, Brown/White, Brown",
+                    "Orange/White, Orange, Blue/White, Blue, Green/White, Green, Brown/White, Brown",
+                    "Brown/White, Brown, Green/White, Blue, Blue/White, Green, Orange/White, Orange"
+                ],
+                answer: 1,
+                explanation: "Urutan warna pin standar (T568B): Pin 1 Orange/White, Pin 2 Orange, Pin 3 Green/White, Pin 4 Blue, Pin 5 Blue/White, Pin 6 Green, Pin 7 Brown/White, Pin 8 Brown."
+            },
+            {
+                id: 40,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C3",
+                question: "Pada skema kabel UTP Straight-Through dan Cross-Over di modul Pertemuan 4, pin manakah yang aktif digunakan untuk Transmit (1 & 2) dan Receive (3 & 6), serta pin mana yang tidak digunakan (not used)?",
+                options: [
+                    "Digunakan: 1, 2, 3, 6 | Tidak digunakan: 4, 5, 7, 8",
+                    "Digunakan: 4, 5, 7, 8 | Tidak digunakan: 1, 2, 3, 6",
+                    "Digunakan: 1, 2, 3, 4 | Tidak digunakan: 5, 6, 7, 8",
+                    "Digunakan: 1, 3, 5, 7 | Tidak digunakan: 2, 4, 6, 8"
+                ],
+                answer: 0,
+                explanation: "Sesuai diagram pin modul Pertemuan 4: Transmit menggunakan Pin 1 & 2, Receive menggunakan Pin 3 & 6, sedangkan Pins 4, 5, 7, dan 8 tidak digunakan (not used)."
+            },
+            {
+                id: 41,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C3",
+                question: "Pada perakitan kabel UTP tipe Cross-Over, terjadi persilangan posisi pin antara ujung satu dengan ujung lainnya, yaitu:",
+                options: [
+                    "Pin 1 ke 4, Pin 2 ke 5",
+                    "Pin 1 ke 3, Pin 2 ke 6 (dan sebaliknya Pin 3 ke 1, Pin 6 ke 2)",
+                    "Pin 1 ke 8, Pin 2 ke 7",
+                    "Semua pin dipasang dengan urutan yang sama persis di kedua ujung"
+                ],
+                answer: 1,
+                explanation: "Pada kabel Cross-Over, kawat 1 menjadi 3 (Orange/White <-> Green/White) dan kawat 2 menjadi 6 (Orange <-> Green) agar jalur Transmit bertemu dengan Receive."
+            },
+            {
+                id: 42,
+                meeting: 4,
+                meetingTitle: "Perakitan Media Transmisi",
+                cognitive: "C2",
+                question: "Sebelum memasukkan ujung kabel UTP yang telah disusun urutannya ke dalam konektor RJ-45, langkah penting yang harus dipastikan adalah:",
+                options: [
+                    "Membakar ujung tembaga kabel agar menyatu",
+                    "Memastikan ujung kabel dipotong sama rata agar seluruh pin menyentuh tembaga konektor",
+                    "Melepas seluruh pelindung warna dari masing-masing kawat kecil",
+                    "Menekuk pin 4 dan 5 ke arah luar konektor"
+                ],
+                answer: 1,
+                explanation: "Langkah ke-5 dan ke-6 perakitan kabel: pastikan urutan warna sesuai standar dan pastikan ujung kabel dipotong sama rata sebelum dimasukkan ke dalam konektor RJ-45."
+            },
+
+            // PERTEMUAN 5 (5 Soal)
+            {
+                id: 43,
+                meeting: 5,
+                meetingTitle: "Topologi Jaringan",
+                cognitive: "C2",
+                question: "Perbedaan mendasar antara Physical Topology dan Logical Topology adalah:",
+                options: [
+                    "Physical Topology mengatur alamat IP, sedangkan Logical Topology mengatur merek kabel",
+                    "Physical Topology menggambarkan penempatan fisik node dan media transmisi, sedangkan Logical Topology menggambarkan jalur aliran data dan pengendalian akses di jaringan",
+                    "Physical Topology hanya untuk jaringan wireless, sedangkan Logical Topology untuk jaringan kabel",
+                    "Tidak ada perbedaan antara keduanya"
+                ],
+                answer: 1,
+                explanation: "Physical Topology menggambarkan penempatan perangkat (node) dan media transmisi secara fisik, sedangkan Logical Topology menggambarkan jalur yang dilewati data, pengendalian akses, dan distribusi sumber daya."
+            },
+            {
+                id: 44,
+                meeting: 5,
+                meetingTitle: "Topologi Jaringan",
+                cognitive: "C2",
+                question: "Karakteristik dari arsitektur Client-Server Network dibandingkan dengan Peer to Peer Network adalah:",
+                options: [
+                    "Setiap komputer memiliki otoritas yang sepenuhnya setara tanpa adanya server",
+                    "Sumber daya yang dipakai bersama dikendalikan oleh Network Operating System (NOS) dan perangkat klien meminta layanan (service) kepada server",
+                    "Hanya dapat menghubungkan maksimal 2 buah komputer",
+                    "Tidak dapat digunakan untuk layanan email maupun database"
+                ],
+                answer: 1,
+                explanation: "Pada Client-Server Network, sumber daya bersama dikendalikan oleh Network Operating System (NOS), dan klien mengirimkan permintaan kepada server untuk mendapatkan layanan."
+            },
+            {
+                id: 45,
+                meeting: 5,
+                meetingTitle: "Topologi Jaringan",
+                cognitive: "C2",
+                question: "Topologi fisik jaringan yang menghubungkan berbagai perangkat akhir (seperti PC, Laptop, Server, dan Network Printer) secara terpusat ke satu perangkat Switch di tengah adalah:",
+                options: [
+                    "Topologi Ring",
+                    "Topologi Bus",
+                    "Topologi Star",
+                    "Topologi Mesh"
+                ],
+                answer: 2,
+                explanation: "Topologi Star menghubungkan setiap node perangkat akhir ke satu perangkat perantara pusat (Switch/Hub)."
+            },
+            {
+                id: 46,
+                meeting: 5,
+                meetingTitle: "Topologi Jaringan",
+                cognitive: "C2",
+                question: "Topologi di mana setiap perangkat komputer terhubung secara langsung ke semua perangkat komputer lainnya sehingga membentuk banyak jalur koneksi langsung adalah:",
+                options: [
+                    "Topologi Bus",
+                    "Topologi Ring",
+                    "Topologi Mesh",
+                    "Topologi Star"
+                ],
+                answer: 2,
+                explanation: "Pada Topologi Mesh, setiap node komputer memiliki koneksi point-to-point langsung ke setiap komputer lainnya di dalam jaringan."
+            },
+            {
+                id: 47,
+                meeting: 5,
+                meetingTitle: "Topologi Jaringan",
+                cognitive: "C3",
+                question: "Pada pengembangan topologi jaringan skala rumah dan kantor kecil (small office), koneksi ke jaringan Internet dapat disederhanakan dengan menggunakan:",
+                options: [
+                    "Lima buah Core Router terpisah",
+                    "Combo device (gabungan fungsi Router + Switch dalam satu perangkat)",
+                    "Kabel Coaxial tanpa perangkat perantara",
+                    "Hanya menggunakan LAN Tester"
+                ],
+                answer: 1,
+                explanation: "Sesuai materi Pengembangan Topologi (1) Pertemuan 5, konektivitas internet skala rumah dan kantor kecil dapat menggunakan Router + Switch terpisah atau menggunakan satu Combo Device (Router + Switch)."
+            },
+
+            // PERTEMUAN 6 (3 Soal)
+            {
+                id: 48,
+                meeting: 6,
+                meetingTitle: "Jaringan Sederhana & Studi Kasus Praktikum",
+                cognitive: "C3",
+                question: "Pada Tugas 1 Pertemuan 6, dibuat jaringan sederhana menggunakan 2 buah Laptop secara langsung dengan IP 192.168.10.1/24 dan 192.168.10.2/24. Mengapa kedua laptop tersebut dapat saling terkoneksi?",
+                options: [
+                    "Karena keduanya menggunakan IP kelas A",
+                    "Karena keduanya berada pada Network ID yang sama (192.168.10.0/24) dengan Host ID yang berbeda (.1 dan .2)",
+                    "Karena subnet mask /24 memblokir semua lalu lintas lokal",
+                    "Karena keduanya memiliki IP Address yang sama persis"
+                ],
+                answer: 1,
+                explanation: "Kedua laptop memiliki Network ID yang sama yaitu 192.168.10.0/24 dan masing-masing menggunakan alamat host yang valid serta unik (.1 dan .2)."
+            },
+            {
+                id: 49,
+                meeting: 6,
+                meetingTitle: "Jaringan Sederhana & Studi Kasus Praktikum",
+                cognitive: "C4",
+                question: "Perhatikan skenario Tugas 3 Pertemuan 6: Empat buah laptop dihubungkan ke 1 buah Switch dengan konfigurasi IP:\n• Laptop 1: 172.168.10.1/30\n• Laptop 2: 172.168.10.2/30\n• Laptop 3: 172.168.10.4/30\n• Laptop 4: 172.168.10.5/30\n\nBerdasarkan analisis subnetting /30 (kelipatan blok 4), bagaimana hasil uji konektivitas keempat laptop tersebut?",
+                options: [
+                    "Keempat laptop dapat saling terhubung seluruhnya tanpa kendala",
+                    "Laptop 1 & 2 dapat saling terkoneksi (subnet 172.168.10.0/30), namun tidak dapat terkoneksi ke Laptop 3 & 4 karena berbeda subnet, serta IP 172.168.10.4/30 pada Laptop 3 merupakan Network Address (tidak valid untuk host)",
+                    "Hanya Laptop 3 dan 4 yang bisa terhubung ke internet",
+                    "Switch otomatis mengubah semua subnet mask menjadi /24"
+                ],
+                answer: 1,
+                explanation: "Analisis /30: Subnet ke-1 (172.168.10.0/30) hanya memiliki host valid .1 dan .2 (Broadcast .3), sehingga Laptop 1 & 2 bisa saling ping. Subnet ke-2 dimulai pada Network Address 172.168.10.4/30 (host valid .5 dan .6, Broadcast .7). Karena berbeda subnet tanpa Router dan .4 adalah Network Address, keempatnya tidak dapat saling terhubung."
+            },
+            {
+                id: 50,
+                meeting: 6,
+                meetingTitle: "Jaringan Sederhana & Studi Kasus Praktikum",
+                cognitive: "C1",
+                question: "Perangkat lunak simulasi jaringan yang wajib diinstal oleh mahasiswa pada Pertemuan 6 untuk menunjang praktikum Pertemuan 9 sampai 14 adalah:",
+                options: [
+                    "NetBeans IDE",
+                    "Cisco Packet Tracer",
+                    "Adobe Photoshop",
+                    "XAMPP Control Panel"
+                ],
+                answer: 1,
+                explanation: "Pada slide tugas Pertemuan 6, mahasiswa diinstruksikan menginstal software Packet Tracer untuk digunakan pada praktikum pertemuan 9 sampai 14."
+            }
+        ];
+
+        const meetingMeta = {
+            1: { title: "Pertemuan 1: Pengenalan Jaringan Komputer", weight: 24, total: 12, cognitive: "C1-C2" },
+            2: { title: "Pertemuan 2: IP Address dan Subnetting", weight: 32, total: 16, cognitive: "C2-C4" },
+            3: { title: "Pertemuan 3: Perangkat Perantara (Intermediary)", weight: 16, total: 8, cognitive: "C2-C3" },
+            4: { title: "Pertemuan 4: Perakitan Media Transmisi", weight: 12, total: 6, cognitive: "C2-C3" },
+            5: { title: "Pertemuan 5: Topologi Jaringan", weight: 10, total: 5, cognitive: "C2-C3" },
+            6: { title: "Pertemuan 6: Jaringan Sederhana & Studi Kasus", weight: 6, total: 3, cognitive: "C3-C4" }
+        };
+
+        // =========================================================================
+        // APPLICATION STATE
+        // =========================================================================
+        let currentMode = 'practice'; // 'practice' | 'exam' | 'matrix' | 'result'
+        let selectedTopic = 'all';
+        let filteredQuestions = [...questionsData];
+        let currentIndex = 0; // Index within filteredQuestions
+
+        // User answers keyed by question ID (1..50) -> option index (0..3)
+        let userAnswers = {};
+        // Doubt/Bookmarked keyed by question ID -> boolean
+        let doubtFlags = {};
+
+        // Exam mode state
+        let examSubmitted = false;
+        let examSecondsLeft = 60 * 60; // 60 minutes
+        let examTimerInterval = null;
+
+        // =========================================================================
+        // INITIALIZATION
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderQuestion();
+            renderNumberGrids();
+            updateGlobalStats();
+        });
+
+        // =========================================================================
+        // THEME TOGGLE
+        // =========================================================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+        }
+
+        // =========================================================================
+        // MODE & VIEW SWITCHING
+        // =========================================================================
+        function switchMode(mode) {
+            currentMode = mode;
+
+            // Update Tab Styles
+            const tabs = {
+                practice: document.getElementById('tabPractice'),
+                exam: document.getElementById('tabExam'),
+                matrix: document.getElementById('tabMatrix'),
+                result: document.getElementById('tabResult')
+            };
+
+            Object.keys(tabs).forEach(key => {
+                if (key === mode) {
+                    tabs[key].className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap bg-blue-600 text-white shadow-sm";
+                } else {
+                    tabs[key].className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800";
+                }
+            });
+
+            // Show/Hide Views
+            const quizView = document.getElementById('quizView');
+            const matrixView = document.getElementById('matrixView');
+            const resultView = document.getElementById('resultView');
+
+            quizView.classList.add('hidden');
+            matrixView.classList.add('hidden');
+            resultView.classList.add('hidden');
+
+            const timerContainer = document.getElementById('timerContainer');
+            const liveScoreContainer = document.getElementById('liveScoreContainer');
+            const finishExamBtn = document.getElementById('finishExamBtn');
+            const submitExamSidebarBtn = document.getElementById('submitExamSidebarBtn');
+            const viewResultSidebarBtn = document.getElementById('viewResultSidebarBtn');
+            const legendCorrectText = document.getElementById('legendCorrectText');
+
+            if (mode === 'practice') {
+                quizView.classList.remove('hidden');
+                timerContainer.classList.add('hidden');
+                timerContainer.classList.remove('flex');
+                liveScoreContainer.classList.remove('hidden');
+                finishExamBtn.classList.add('hidden');
+                finishExamBtn.classList.remove('flex');
+                submitExamSidebarBtn.classList.add('hidden');
+                submitExamSidebarBtn.classList.remove('flex');
+                viewResultSidebarBtn.classList.remove('hidden');
+                legendCorrectText.textContent = "Benar (Latihan)";
+                stopExamTimer();
+                renderQuestion();
+                renderNumberGrids();
+            } else if (mode === 'exam') {
+                quizView.classList.remove('hidden');
+                timerContainer.classList.remove('hidden');
+                timerContainer.classList.add('flex');
+                liveScoreContainer.classList.add('hidden');
+                finishExamBtn.classList.remove('hidden');
+                finishExamBtn.classList.add('flex');
+                submitExamSidebarBtn.classList.remove('hidden');
+                submitExamSidebarBtn.classList.add('flex');
+                viewResultSidebarBtn.classList.add('hidden');
+                legendCorrectText.textContent = examSubmitted ? "Benar" : "Sudah Dijawab";
+
+                if (!examSubmitted) {
+                    startExamTimer();
+                }
+                renderQuestion();
+                renderNumberGrids();
+            } else if (mode === 'matrix') {
+                matrixView.classList.remove('hidden');
+            } else if (mode === 'result') {
+                resultView.classList.remove('hidden');
+                renderEvaluationView();
+            }
+
+            lucide.createIcons();
+        }
+
+        function filterAndStart(meetingNumber) {
+            const select = document.getElementById('topicFilter');
+            select.value = meetingNumber;
+            handleTopicFilterChange();
+            switchMode('practice');
+        }
+
+        function handleTopicFilterChange() {
+            const select = document.getElementById('topicFilter');
+            selectedTopic = select.value;
+
+            if (selectedTopic === 'all') {
+                filteredQuestions = [...questionsData];
+            } else {
+                const mNum = parseInt(selectedTopic, 10);
+                filteredQuestions = questionsData.filter(q => q.meeting === mNum);
+            }
+
+            currentIndex = 0;
+            renderQuestion();
+            renderNumberGrids();
+        }
+
+        // =========================================================================
+        // RENDER ACTIVE QUESTION
+        // =========================================================================
+        function renderQuestion() {
+            const q = filteredQuestions[currentIndex];
+            if (!q) return;
+
+            document.getElementById('qNumberBadge').textContent = `Soal #${q.id}`;
+            document.getElementById('qMeetingBadge').textContent = `Pertemuan ${q.meeting}`;
+            document.getElementById('qCognitiveBadge').textContent = q.cognitive;
+            document.getElementById('qCategoryTitle').textContent = q.meetingTitle;
+            document.getElementById('qText').textContent = q.question;
+
+            // Update Doubt Button
+            const isDoubt = !!doubtFlags[q.id];
+            const doubtBtn = document.getElementById('doubtBtn');
+            const doubtBtnText = document.getElementById('doubtBtnText');
+            if (isDoubt) {
+                doubtBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 bg-amber-100 dark:bg-amber-950/90 border-amber-400 text-amber-800 dark:text-amber-300";
+                doubtBtnText.textContent = "Ditandai Ragu-ragu";
+            } else {
+                doubtBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-950/40";
+                doubtBtnText.textContent = "Tandai Ragu-ragu";
+            }
+
+            // Render Options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D'];
+            const userSelected = userAnswers[q.id];
+            const showFeedback = (currentMode === 'practice' && userSelected !== undefined) || (currentMode === 'exam' && examSubmitted);
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectOption(q.id, idx);
+
+                let cardStyle = "w-full text-left p-4 rounded-xl border-2 flex items-start gap-3.5 option-btn ";
+                let badgeStyle = "w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 transition ";
+
+                if (showFeedback) {
+                    if (idx === q.answer) {
+                        // Correct option highlight
+                        cardStyle += "bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 text-emerald-950 dark:text-emerald-100";
+                        badgeStyle += "bg-emerald-600 text-white";
+                    } else if (idx === userSelected && userSelected !== q.answer) {
+                        // Wrong option selected by user
+                        cardStyle += "bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 text-rose-950 dark:text-rose-100";
+                        badgeStyle += "bg-rose-600 text-white";
+                    } else {
+                        cardStyle += "bg-slate-50/60 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 opacity-75";
+                        badgeStyle += "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
+                    }
+                } else {
+                    if (idx === userSelected) {
+                        cardStyle += "bg-blue-50/90 dark:bg-blue-950/60 border-blue-600 text-blue-950 dark:text-blue-100 shadow-sm";
+                        badgeStyle += "bg-blue-600 text-white";
+                    } else {
+                        cardStyle += "bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 text-slate-800 dark:text-slate-200";
+                        badgeStyle += "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300";
+                    }
+                }
+
+                btn.className = cardStyle;
+                btn.innerHTML = `
+                    <span class="${badgeStyle}">${letters[idx]}</span>
+                    <span class="text-sm sm:text-base font-medium leading-relaxed flex-1">${optText}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Explanation Box
+            const explanationBox = document.getElementById('explanationBox');
+            if (showFeedback) {
+                explanationBox.classList.remove('hidden');
+                const isCorrect = userSelected === q.answer;
+                const statusTitle = document.getElementById('explanationStatusTitle');
+                const keyBadge = document.getElementById('explanationKeyBadge');
+                const expText = document.getElementById('explanationText');
+                const iconBox = document.getElementById('explanationIconBox');
+
+                keyBadge.textContent = `Kunci Jawaban: ${letters[q.answer]}`;
+                expText.textContent = q.explanation;
+
+                if (isCorrect) {
+                    explanationBox.className = "mt-6 rounded-2xl p-4 sm:p-5 border bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100";
+                    iconBox.className = "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-emerald-600 text-white";
+                    iconBox.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5"></i>';
+                    statusTitle.textContent = "Tepat Sekali! Jawaban Anda Benar";
+                } else {
+                    explanationBox.className = "mt-6 rounded-2xl p-4 sm:p-5 border bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 text-rose-950 dark:text-rose-100";
+                    iconBox.className = "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-rose-600 text-white";
+                    iconBox.innerHTML = '<i data-lucide="x-circle" class="w-5 h-5"></i>';
+                    statusTitle.textContent = userSelected === undefined ? "Soal Tidak Dijawab" : "Kurang Tepat! Mari Simak Pembahasannya";
+                }
+            } else {
+                explanationBox.classList.add('hidden');
+            }
+
+            // Navigation Footer State
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentIndex === filteredQuestions.length - 1) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-40', 'pointer-events-none');
+            }
+
+            document.getElementById('progressCounterText').textContent = `${currentIndex + 1} dari ${filteredQuestions.length} Soal`;
+
+            lucide.createIcons();
+        }
+
+        // =========================================================================
+        // USER INTERACTIONS
+        // =========================================================================
+        function selectOption(questionId, optionIndex) {
+            if (currentMode === 'exam' && examSubmitted) return; // Lock after exam submit
+
+            userAnswers[questionId] = optionIndex;
+            renderQuestion();
+            renderNumberGrids();
+            updateGlobalStats();
+        }
+
+        function toggleDoubt() {
+            const q = filteredQuestions[currentIndex];
+            if (!q) return;
+            doubtFlags[q.id] = !doubtFlags[q.id];
+            renderQuestion();
+            renderNumberGrids();
+        }
+
+        function navigateQuestion(direction) {
+            const nextIdx = currentIndex + direction;
+            if (nextIdx >= 0 && nextIdx < filteredQuestions.length) {
+                currentIndex = nextIdx;
+                renderQuestion();
+                renderNumberGrids();
+            }
+        }
+
+        function jumpToQuestionIndex(idx) {
+            currentIndex = idx;
+            renderQuestion();
+            renderNumberGrids();
+            // Close mobile drawer if open
+            const drawer = document.getElementById('mobileDrawer');
+            if (!drawer.classList.contains('translate-y-full')) {
+                toggleMobileDrawer();
+            }
+        }
+
+        // =========================================================================
+        // RENDER NUMBER GRIDS (DESKTOP & MOBILE)
+        // =========================================================================
+        function renderNumberGrids() {
+            const desktopGrid = document.getElementById('desktopNumberGrid');
+            const mobileGrid = document.getElementById('mobileNumberGrid');
+            desktopGrid.innerHTML = '';
+            mobileGrid.innerHTML = '';
+
+            filteredQuestions.forEach((q, idx) => {
+                const ans = userAnswers[q.id];
+                const isDoubt = !!doubtFlags[q.id];
+                const isCurrent = idx === currentIndex;
+
+                let btnClass = "h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border ";
+
+                if (isDoubt) {
+                    btnClass += "bg-amber-500 text-white border-amber-600 ";
+                } else if (ans !== undefined) {
+                    if (currentMode === 'practice' || (currentMode === 'exam' && examSubmitted)) {
+                        if (ans === q.answer) {
+                            btnClass += "bg-emerald-600 text-white border-emerald-700 ";
+                        } else {
+                            btnClass += "bg-rose-600 text-white border-rose-700 ";
+                        }
+                    } else {
+                        // Exam mode before submit
+                        btnClass += "bg-blue-600 text-white border-blue-700 ";
+                    }
+                } else {
+                    btnClass += "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 ";
+                }
+
+                if (isCurrent) {
+                    btnClass += "ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-slate-900 scale-105";
+                }
+
+                const btnDesktop = document.createElement('button');
+                btnDesktop.className = btnClass;
+                btnDesktop.textContent = q.id;
+                btnDesktop.onclick = () => jumpToQuestionIndex(idx);
+                desktopGrid.appendChild(btnDesktop);
+
+                const btnMobile = document.createElement('button');
+                btnMobile.className = btnClass;
+                btnMobile.textContent = q.id;
+                btnMobile.onclick = () => jumpToQuestionIndex(idx);
+                mobileGrid.appendChild(btnMobile);
+            });
+        }
+
+        // =========================================================================
+        // GLOBAL STATS & EVALUATION REPORT
+        // =========================================================================
+        function updateGlobalStats() {
+            const totalAnswered = Object.keys(userAnswers).length;
+            let totalCorrect = 0;
+
+            questionsData.forEach(q => {
+                if (userAnswers[q.id] === q.answer) {
+                    totalCorrect++;
+                }
+            });
+
+            const score = totalCorrect * 2; // 50 questions * 2 = 100
+            document.getElementById('headerScoreText').textContent = `${score} / 100`;
+            document.getElementById('answeredCountBadge').textContent = `${totalAnswered}/50 Terjawab`;
+
+            const percentProgress = Math.round((totalAnswered / 50) * 100);
+            document.getElementById('sidebarProgressBar').style.width = `${percentProgress}%`;
+        }
+
+        function renderEvaluationView() {
+            let totalCorrect = 0;
+            let totalWrong = 0;
+            let totalUnanswered = 0;
+
+            questionsData.forEach(q => {
+                const ans = userAnswers[q.id];
+                if (ans === undefined) {
+                    totalUnanswered++;
+                } else if (ans === q.answer) {
+                    totalCorrect++;
+                } else {
+                    totalWrong++;
+                }
+            });
+
+            const finalScore = totalCorrect * 2;
+            document.getElementById('statFinalScore').textContent = finalScore;
+            document.getElementById('statCorrectCount').textContent = totalCorrect;
+            document.getElementById('statWrongCount').textContent = totalWrong;
+            document.getElementById('statUnansweredCount').textContent = totalUnanswered;
+
+            const gradeLabel = document.getElementById('statGradeLabel');
+            if (finalScore >= 85) {
+                gradeLabel.textContent = "Predikat A (Sangat Memuaskan)";
+            } else if (finalScore >= 75) {
+                gradeLabel.textContent = "Predikat B (Baik - Siap UTS)";
+            } else if (finalScore >= 60) {
+                gradeLabel.textContent = "Predikat C (Cukup - Perlu Latihan)";
+            } else {
+                gradeLabel.textContent = "Perlu Belajar Lebih Intensif";
+            }
+
+            // Per-meeting breakdown
+            const container = document.getElementById('topicBreakdownContainer');
+            container.innerHTML = '';
+
+            Object.keys(meetingMeta).forEach(mKey => {
+                const mNum = parseInt(mKey, 10);
+                const meta = meetingMeta[mNum];
+                const mQuestions = questionsData.filter(q => q.meeting === mNum);
+
+                let mCorrect = 0;
+                let mAnswered = 0;
+                mQuestions.forEach(q => {
+                    if (userAnswers[q.id] !== undefined) {
+                        mAnswered++;
+                        if (userAnswers[q.id] === q.answer) mCorrect++;
+                    }
+                });
+
+                const pct = Math.round((mCorrect / meta.total) * 100);
+                let barColor = "bg-blue-600";
+                if (pct >= 80) barColor = "bg-emerald-500";
+                else if (pct >= 50) barColor = "bg-amber-500";
+                else if (mAnswered > 0) barColor = "bg-rose-500";
+
+                const card = document.createElement('div');
+                card.className = "p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Bobot UTS: ${meta.weight}% • ${meta.cognitive}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">${mCorrect}/${meta.total} Benar (${pct}%)</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-900 dark:text-white mb-3">${meta.title}</h4>
+                    </div>
+                    <div>
+                        <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-3">
+                            <div class="h-full ${barColor} transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                            <span>Terjawab: ${mAnswered} dari ${meta.total} soal</span>
+                            <button onclick="filterAndStart('${mNum}')" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Buka Soal Bab ${mNum} →</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // =========================================================================
+        // EXAM TIMER
+        // =========================================================================
+        function startExamTimer() {
+            if (examTimerInterval) return;
+            examTimerInterval = setInterval(() => {
+                if (examSecondsLeft > 0) {
+                    examSecondsLeft--;
+                    updateTimerDisplay();
+                } else {
+                    stopExamTimer();
+                    submitExamNow();
+                }
+            }, 1000);
+        }
+
+        function stopExamTimer() {
+            if (examTimerInterval) {
+                clearInterval(examTimerInterval);
+                examTimerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(examSecondsLeft / 60);
+            const secs = examSecondsLeft % 60;
+            const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = formatted;
+        }
+
+        // =========================================================================
+        // MODALS & DRAWER
+        // =========================================================================
+        function toggleMobileDrawer() {
+            const drawer = document.getElementById('mobileDrawer');
+            const backdrop = document.getElementById('mobileDrawerBackdrop');
+            const isHidden = drawer.classList.contains('translate-y-full');
+
+            if (isHidden) {
+                backdrop.classList.remove('hidden');
+                drawer.classList.remove('translate-y-full');
+            } else {
+                backdrop.classList.add('hidden');
+                drawer.classList.add('translate-y-full');
+            }
+        }
+
+        function openResetModal() {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalTitle').textContent = "Reset Semua Jawaban?";
+            document.getElementById('modalDescription').textContent = "Seluruh jawaban yang telah Anda pilih, penanda ragu-ragu, serta waktu simulasi UTS akan dikembalikan ke awal (0/50).";
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            confirmBtn.textContent = "Ya, Reset Kuis";
+            confirmBtn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700";
+            confirmBtn.onclick = () => {
+                resetAllProgress();
+                closeModal();
+            };
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function openSubmitModal() {
+            const answeredCount = Object.keys(userAnswers).length;
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalTitle').textContent = "Kumpulkan Simulasi UTS?";
+            document.getElementById('modalDescription').textContent = `Anda telah menjawab ${answeredCount} dari 50 soal. Setelah dikumpulkan, skor akhir dan pembahasan lengkap tiap nomor akan ditampilkan.`;
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            confirmBtn.textContent = "Kumpulkan & Lihat Nilai";
+            confirmBtn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700";
+            confirmBtn.onclick = () => {
+                submitExamNow();
+                closeModal();
+            };
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function submitExamNow() {
+            examSubmitted = true;
+            stopExamTimer();
+            switchMode('result');
+        }
+
+        function resetAllProgress() {
+            userAnswers = {};
+            doubtFlags = {};
+            examSubmitted = false;
+            examSecondsLeft = 60 * 60;
+            updateTimerDisplay();
+            currentIndex = 0;
+            renderQuestion();
+            renderNumberGrids();
+            updateGlobalStats();
+            if (currentMode === 'result') {
+                switchMode('practice');
+            }
+        }
+    </script>
+</body>
+</html>
